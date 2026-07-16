@@ -1292,16 +1292,6 @@ export const CadViewer = React.memo(function CadViewer({ config }: CadViewerProp
                         {segCols} Cols × {b.rows} Rows
                       </span>
                     </div>
-                    {!isSchematic && (
-                      <div className="flex justify-between gap-4">
-                        <span className="opacity-60 shrink-0">Y Span:</span>
-                        <span className="font-bold text-right">[{b.minY.toFixed(1)}, {b.maxY.toFixed(1)}] μm</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between gap-4 border-t border-[#141414]/10 pt-1.5 mt-1">
-                      <span className="opacity-60 shrink-0">Physical Size:</span>
-                      <span className="font-bold text-right">{(segCols * x_pitch).toFixed(1)} x {(b.rows * y_pitch).toFixed(1)} μm</span>
-                    </div>
                   </div>
                 </div>
               );

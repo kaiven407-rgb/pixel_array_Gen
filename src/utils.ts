@@ -285,8 +285,8 @@ export function generateSkillCode(config: LayoutConfig): string {
       code.push('          "R0"');
       code.push(`          ${row.rows}`);
       code.push(`          ${config.total_cols}`);
-      code.push(`            ${config.x_pitch}`);
       code.push(`            ${config.y_pitch}`);
+      code.push(`            ${config.x_pitch}`);
       code.push('        )');
       code.push('      )');
       code.push('    )');
@@ -301,8 +301,8 @@ export function generateSkillCode(config: LayoutConfig): string {
       code.push('          "R0"');
       code.push(`            ${row.rows}`);
       code.push(`            ${config.total_cols}`);
-      code.push(`            ${config.x_pitch}`);
       code.push(`            ${config.y_pitch}`);
+      code.push(`            ${config.x_pitch}`);
       code.push('          )');
       code.push('        )');
       code.push('      )');
@@ -354,8 +354,8 @@ export function generateSkillCode(config: LayoutConfig): string {
         code.push('          "R0"');
         code.push(`          ${row.rows}`);
         code.push(`          ${seg.cols}`);
-        code.push(`            ${config.x_pitch}`);
-      code.push(`            ${config.y_pitch}`);
+        code.push(`            ${config.y_pitch}`);
+      code.push(`            ${config.x_pitch}`);
         code.push('        )');
         code.push('      )');
         code.push('    )');
@@ -370,8 +370,8 @@ export function generateSkillCode(config: LayoutConfig): string {
         code.push('          "R0"');
         code.push(`            ${row.rows}`);
         code.push(`            ${seg.cols}`);
-        code.push(`            ${config.x_pitch}`);
-      code.push(`            ${config.y_pitch}`);
+        code.push(`            ${config.y_pitch}`);
+      code.push(`            ${config.x_pitch}`);
         code.push('          )');
         code.push('        )');
         code.push('      )');
@@ -875,8 +875,8 @@ def main():
        "{cell_info["rot"]}"
        {row_count}
        {total_cols}
+       {y_pitch}
        {x_pitch}
-        {y_pitch}
     )
    )
   )
@@ -892,8 +892,8 @@ def main():
         "{cell_info["rot"]}"
         {row_count}
         {total_cols}
-        {x_pitch}
         {y_pitch}
+        {x_pitch}
      )
     )
    )
@@ -959,8 +959,8 @@ def main():
        "{seg_cell_info["rot"]}"
        {row_count}
        {seg_cols}
+       {y_pitch}
        {x_pitch}
-        {y_pitch}
     )
    )
   )
@@ -976,8 +976,8 @@ def main():
         "{seg_cell_info["rot"]}"
         {row_count}
         {seg_cols}
-        {x_pitch}
         {y_pitch}
+        {x_pitch}
      )
     )
    )
@@ -1475,8 +1475,8 @@ for row in reversed(rows):
        "{cell_info["rot"]}"
        {row_count}
        {total_cols}
+       {y_pitch}
        {x_pitch}
-        {y_pitch}
     )
    )
   )
@@ -1492,8 +1492,8 @@ for row in reversed(rows):
         "{cell_info["rot"]}"
         {row_count}
         {total_cols}
-        {x_pitch}
         {y_pitch}
+        {x_pitch}
      )
     )
    )
@@ -2077,8 +2077,8 @@ export function exportToExcel(config: LayoutConfig): ArrayBuffer {
     ['--- ARRAY GLOBAL SETTINGS ---', '', '', '', '', '', ''],
     ['library', config.top_lib, '<-- Target library name', '', '', '', ''],
     ['cellname', config.top_cell, '<-- Target cell view name', '', '', '', ''],
-    ['x pitch', config.x_pitch, '<-- Width of one pixel column (um)', '', '', '', ''],
-    ['y pitch', config.y_pitch, '<-- Height of one pixel row (um)', '', '', '', ''],
+    ['x pitch', config.x_pitch, '<-- x direction pixel unit pitch', '', '', '', ''],
+    ['y pitch', config.y_pitch, '<-- y direction pixel unit pitch', '', '', '', ''],
     ['', '', '', '', '', '', ''],
     ['--- ARRAY WIDTH ---', '', '', '', '', '', ''],
     ['col_num', '', '<-- Total number of columns', '', '', '', ''],

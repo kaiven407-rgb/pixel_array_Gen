@@ -401,14 +401,20 @@ export function generateSkillCode(config: LayoutConfig): string {
 
   code.push('    ; --- Center Array at (0, 0) ---');
   code.push('    printf("\\nFinding Global Array Center...\\n")');
-  code.push(`    dx = -(${config.total_cols * config.x_pitch} / 2.0)`);
-  code.push('    dy = -(currentY / 2.0)');
-  code.push('    printf("Global Center: cx=%L cy=%L\\n" -(dx) -(dy))');
+  code.push('    if( rovInst != nil then');
+  code.push('      C = centerBox(rovInst~>bBox)');
+  code.push('      dx = 0.0 - car(C)');
+  code.push('      dy = 0.0 - cadr(C)');
+  code.push('    else');
+  code.push(`      dx = 0.0 - (${config.total_cols * config.x_pitch} / 2.0)`);
+  code.push('      dy = 0.0 - (currentY / 2.0)');
+  code.push('    )');
+  code.push('    printf("Global Center: cx=%L cy=%L\\n" 0.0 - dx 0.0 - dy)');
   code.push('    printf("Shifting all parts by dx=%L dy=%L\\n" dx dy)');
   code.push('');
   code.push('    foreach(item allInsts');
   code.push('      inst = car(item)');
-  code.push('      inst~>xy = list(car(inst~>xy)+dx cadr(inst~>xy)+dy)');
+  code.push('      inst~>xy = list(car(inst~>xy) + dx cadr(inst~>xy) + dy)');
   code.push('    )');
   code.push('');
   code.push('    ; --- Apply Rotations ---');
@@ -1008,9 +1014,15 @@ def main():
     # Center Array at (0,0) based on collective center of all rows
     skill.append(f"""
  printf("\\\\nFinding Global Array Center...\\\\n")
- dx = -({total_cols * x_pitch} / 2.0)
- dy = -(currentY / 2.0)
- printf("Global Center: cx=%L cy=%L\\\\n" -(dx) -(dy))
+ if( rovInst != nil then
+   C = centerBox(rovInst~>bBox)
+   dx = 0.0 - car(C)
+   dy = 0.0 - cadr(C)
+ else
+   dx = 0.0 - ({total_cols * x_pitch} / 2.0)
+   dy = 0.0 - (currentY / 2.0)
+ )
+ printf("Global Center: cx=%L cy=%L\\\\n" 0.0 - dx 0.0 - dy)
  printf("Move dx=%L dy=%L\\\\n" dx dy)
 
  foreach(
@@ -1018,7 +1030,7 @@ def main():
    allInsts
 
    inst = car(item)
-   inst~>xy = list(car(inst~>xy)+dx cadr(inst~>xy)+dy)
+   inst~>xy = list(car(inst~>xy) + dx cadr(inst~>xy) + dy)
  )
  
  ; --- Apply Rotations ---
@@ -1532,9 +1544,15 @@ for row in reversed(rows):
 
 skill.append(f"""
  printf("\\\\nFinding Global Array Center...\\\\n")
- dx = -({total_cols * x_pitch} / 2.0)
- dy = -(currentY / 2.0)
- printf("Global Center: cx=%L cy=%L\\\\n" -(dx) -(dy))
+ if( rovInst != nil then
+   C = centerBox(rovInst~>bBox)
+   dx = 0.0 - car(C)
+   dy = 0.0 - cadr(C)
+ else
+   dx = 0.0 - ({total_cols * x_pitch} / 2.0)
+   dy = 0.0 - (currentY / 2.0)
+ )
+ printf("Global Center: cx=%L cy=%L\\\\n" 0.0 - dx 0.0 - dy)
  printf("Move dx=%L dy=%L\\\\n" dx dy)
 """)
 
@@ -1545,7 +1563,7 @@ skill.append("""
    allInsts
 
    inst = car(item)
-   inst~>xy = list(car(inst~>xy)+dx cadr(inst~>xy)+dy)
+   inst~>xy = list(car(inst~>xy) + dx cadr(inst~>xy) + dy)
  )
  
  ; --- Apply Rotations ---

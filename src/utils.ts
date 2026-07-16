@@ -282,7 +282,7 @@ export function generateSkillCode(config: LayoutConfig): string {
       code.push('          master');
       code.push(`          "${mosaicName}"`);
       code.push('          list(0.0 currentY)');
-      code.push('          "R0"');
+      code.push(`          "${cellInfo.rot}"`);
       code.push(`          ${row.rows}`);
       code.push(`          ${config.total_cols}`);
       code.push(`            ${config.y_pitch}`);
@@ -298,7 +298,7 @@ export function generateSkillCode(config: LayoutConfig): string {
       code.push('            master');
       code.push(`            "${mosaicName}"`);
       code.push('            list(0.0 currentY)');
-      code.push('          "R0"');
+      code.push(`          "${cellInfo.rot}"`);
       code.push(`            ${row.rows}`);
       code.push(`            ${config.total_cols}`);
       code.push(`            ${config.y_pitch}`);
@@ -351,7 +351,7 @@ export function generateSkillCode(config: LayoutConfig): string {
         code.push('          master');
         code.push(`          "${segName}"`);
         code.push(`          list(${currentSegX.toFixed(4)} currentY)`);
-        code.push('          "R0"');
+        code.push(`          "${segCellInfo.rot}"`);
         code.push(`          ${row.rows}`);
         code.push(`          ${seg.cols}`);
         code.push(`            ${config.y_pitch}`);
@@ -367,7 +367,7 @@ export function generateSkillCode(config: LayoutConfig): string {
         code.push('            master');
         code.push(`          "${segName}"`);
         code.push(`            list(${currentSegX.toFixed(4)} currentY)`);
-        code.push('          "R0"');
+        code.push(`          "${segCellInfo.rot}"`);
         code.push(`            ${row.rows}`);
         code.push(`            ${seg.cols}`);
         code.push(`            ${config.y_pitch}`);

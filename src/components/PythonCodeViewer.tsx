@@ -125,7 +125,7 @@ function highlightPythonCode(code: string) {
         styledCode.push(<span key={tIdx} className="text-amber-400">{token}</span>);
       } else if (token === 'RuntimeError' || token === 'Exception') {
         styledCode.push(<span key={tIdx} className="text-rose-400 font-medium">{token}</span>);
-      } else if (token === 'total_cols' || token === 'active_col_purpose' || token === 'rov_purpose' || token === 'rows' || token === 'skill') {
+      } else if (token === 'total_cols' || token === 'rov_purpose' || token === 'rows' || token === 'skill') {
         styledCode.push(<span key={tIdx} className="text-sky-300 font-medium">{token}</span>);
       } else {
         styledCode.push(<span key={tIdx}>{token}</span>);

@@ -48,9 +48,26 @@ export function ParamsForm({ config, onConfigChange, isModified, onApplyChanges,
         [keyOrObject]: value
       };
     }
+    const updatedCellMap = { ...config.cell_map };
+    updatedRows.forEach(row => {
+      const p = row.purpose.toLowerCase();
+      if (!updatedCellMap[p]) {
+        updatedCellMap[p] = { name: row.purpose, lib: 'pixel_lib', cell: `cell_${p}`, rot: 'R0' };
+      }
+      if (row.segments) {
+        row.segments.forEach(seg => {
+          const sp = seg.purpose.toLowerCase();
+          if (!updatedCellMap[sp]) {
+            updatedCellMap[sp] = { name: seg.purpose, lib: 'pixel_lib', cell: `cell_${sp}`, rot: 'R0' };
+          }
+        });
+      }
+    });
+
     onConfigChange({
       ...config,
-      rows: updatedRows
+      rows: updatedRows,
+      cell_map: updatedCellMap
     });
   };
 
@@ -166,18 +183,13 @@ export function ParamsForm({ config, onConfigChange, isModified, onApplyChanges,
       updatedRov = cleanNewName;
     }
 
-    // Cascade rename to active_col_purpose if it matches
-    let updatedActive = config.active_col_purpose;
-    if (config.active_col_purpose === oldKey) {
-      updatedActive = cleanNewName;
-    }
+
 
     onConfigChange({
       ...config,
       cell_map: updatedCellMap,
       rows: updatedRows,
       rov_purpose: updatedRov,
-      active_col_purpose: updatedActive
     });
 
     setEditingPurposeKey(null);
@@ -207,18 +219,13 @@ export function ParamsForm({ config, onConfigChange, isModified, onApplyChanges,
       updatedRov = fallbackKey;
     }
 
-    // Cascade update to active_col_purpose if it matches
-    let updatedActive = config.active_col_purpose;
-    if (config.active_col_purpose === purposeKey) {
-      updatedActive = fallbackKey;
-    }
+
 
     onConfigChange({
       ...config,
       cell_map: updatedCellMap,
       rows: updatedRows,
       rov_purpose: updatedRov,
-      active_col_purpose: updatedActive
     });
 
     setConfirmDeletePurposeKey(null);
@@ -338,17 +345,7 @@ export function ParamsForm({ config, onConfigChange, isModified, onApplyChanges,
               ))}
             </select>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-mono font-black text-[#141414]/60 uppercase tracking-widest flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={config.rotate180 || false}
-                onChange={(e) => updateGlobal('rotate180', e.target.checked)}
-                className="w-3.5 h-3.5 border-2 border-[#141414] rounded-none accent-[#141414] cursor-pointer"
-              />
-              Rotate Array 180° (R180)
-            </label>
-          </div>
+
         </div>
       )}
 
@@ -692,16 +689,18 @@ export function RowItemEditor({ row, idx, cellMap, totalCols, onUpdate, onDelete
     }
 
     onUpdate({
-      segments: segments.length > 0 ? segments : undefined
+      segments: segments.length > 0 ? segments : undefined,
+      leftStr: leftVal,
+      rightStr: rightVal
     });
   };
 
   // Sync state if external changes happen (e.g., spreadsheet upload)
   React.useEffect(() => {
-    const { leftStr: newLeft, rightStr: newRight } = getLeftRightStringsFromSegments(row.segments, row.purpose);
+    const { leftStr: newLeft, rightStr: newRight } = getLeftRightStringsFromSegments(row.segments, row.purpose, row);
     setLeftInput(newLeft);
     setRightInput(newRight);
-  }, [row.segments, row.purpose]);
+  }, [row.segments, row.purpose, row.leftStr, row.rightStr]);
 
   return (
     <div className="flex flex-col gap-3 bg-[#E4E3E0]/30 p-3 rounded-none border border-[#141414] group hover:border-[#141414] hover:bg-[#E4E3E0]/40 transition-all">

@@ -56,6 +56,7 @@ export const CadViewer = React.memo(function CadViewer({ config }: CadViewerProp
   const [showSubgrid, setShowSubgrid] = useState(true);
   const [showCoordinates, setShowCoordinates] = useState(true);
   const [hoveredRowIdx, setHoveredRowIdx] = useState<number | null>(null);
+  const [hoveredSegIdx, setHoveredSegIdx] = useState<number | null>(null);
   const [hoveredCoord, setHoveredCoord] = useState<{ x: number; y: number } | null>(null);
   
   // Viewport zoom & pan state
@@ -1047,8 +1048,8 @@ export const CadViewer = React.memo(function CadViewer({ config }: CadViewerProp
                 return (
                   <g 
                     key={bIdx}
-                    onMouseEnter={() => setHoveredRowIdx(bIdx)}
-                    onMouseLeave={() => setHoveredRowIdx(null)}
+                    onMouseEnter={() => { setHoveredRowIdx(bIdx); setHoveredSegIdx(null); }}
+                    onMouseLeave={() => { setHoveredRowIdx(null); setHoveredSegIdx(null); }}
                     className="cursor-pointer transition-all duration-150"
                   >
                     {/* Main row block rectangle or multiple segment rectangles */}
@@ -1072,6 +1073,7 @@ export const CadViewer = React.memo(function CadViewer({ config }: CadViewerProp
                           const rx = currX * baseScale;
                           const rw = segLayoutW * baseScale;
                           currX += segLayoutW;
+                          const isSegHovered = isHovered && hoveredSegIdx === sIdx;
                           return (
                             <rect
                               key={sIdx}
@@ -1079,9 +1081,11 @@ export const CadViewer = React.memo(function CadViewer({ config }: CadViewerProp
                               y={y}
                               width={rw}
                               height={h}
-                              fill={isHovered ? segColor.fill.replace('0.15', '0.30') : segColor.fill}
-                              stroke={isHovered ? '#ffffff' : segColor.stroke}
-                              strokeWidth={isHovered ? 2 : Math.min(1.5, Math.max(0.2, h / 3))}
+                              onMouseEnter={() => setHoveredSegIdx(sIdx)}
+                              onMouseLeave={() => setHoveredSegIdx(null)}
+                              fill={isSegHovered || (isHovered && hoveredSegIdx === null) ? segColor.fill.replace('0.15', '0.30') : segColor.fill}
+                              stroke={isSegHovered || (isHovered && hoveredSegIdx === null) ? '#ffffff' : segColor.stroke}
+                              strokeWidth={isSegHovered || (isHovered && hoveredSegIdx === null) ? 2 : Math.min(1.5, Math.max(0.2, h / 3))}
                               className="transition-all duration-100"
                             />
                           );
@@ -1236,23 +1240,35 @@ export const CadViewer = React.memo(function CadViewer({ config }: CadViewerProp
           >
             {(() => {
               const b = layout.blocks[hoveredRowIdx];
-              const cell = cell_map[b.purpose.toLowerCase()] || { lib: 'unknown_lib', cell: 'cell_unknown', rot: 'R0' };
-              const isRov = b.purpose.toLowerCase() === rov_purpose.toLowerCase();
+              let purposeToShow = b.purpose.toLowerCase();
+              let nameToShow = b.name || b.purpose;
+              let isSegment = false;
+              let segCols = total_cols;
+              
+              if (b.segments && hoveredSegIdx !== null && b.segments[hoveredSegIdx]) {
+                const seg = b.segments[hoveredSegIdx];
+                purposeToShow = seg.purpose.toLowerCase();
+                nameToShow = `${seg.purpose} (Segment)`;
+                isSegment = true;
+                segCols = seg.cols;
+              }
+              
+              const cell = cell_map[purposeToShow] || { lib: 'unknown_lib', cell: 'cell_unknown', rot: 'R0' };
+              const isRov = purposeToShow === rov_purpose.toLowerCase();
 
               return (
                 <div className="space-y-2.5 font-sans">
                   <div className="flex items-center justify-between border-b-2 border-[#141414]/10 pb-2">
                     <span className="font-black text-xs uppercase italic tracking-tight flex items-center gap-1.5">
                       <span className={`w-2 h-2 ${isRov ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                      {(b.name || b.purpose).toUpperCase()} Block
+                      {nameToShow.toUpperCase()} {isSegment ? '' : 'Block'}
                     </span>
                     <span className="text-[10px] font-mono text-white bg-[#141414] uppercase tracking-widest px-1.5 py-0.5 font-bold">
-                      {b.rows} Rows
+                      {isSegment ? `${segCols} Cols` : `${b.rows} Rows`}
                     </span>
                   </div>
-
                   <div className="space-y-1.5 text-xs font-mono">
-                    {b.name && b.name.toLowerCase() !== b.purpose.toLowerCase() && (
+                    {b.name && b.name.toLowerCase() !== purposeToShow && !isSegment && (
                       <div className="flex justify-between gap-4">
                         <span className="opacity-60 shrink-0">Purpose:</span>
                         <span className="text-amber-600 font-bold text-right break-all">{b.purpose.toUpperCase()}</span>
@@ -1270,6 +1286,12 @@ export const CadViewer = React.memo(function CadViewer({ config }: CadViewerProp
                       <span className="opacity-60 shrink-0">Rotation:</span>
                       <span className="font-bold text-right">{cell.rot}</span>
                     </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="opacity-60 shrink-0">Grid:</span>
+                      <span className="font-bold text-right">
+                        {segCols} Cols × {b.rows} Rows
+                      </span>
+                    </div>
                     {!isSchematic && (
                       <div className="flex justify-between gap-4">
                         <span className="opacity-60 shrink-0">Y Span:</span>
@@ -1278,7 +1300,7 @@ export const CadViewer = React.memo(function CadViewer({ config }: CadViewerProp
                     )}
                     <div className="flex justify-between gap-4 border-t border-[#141414]/10 pt-1.5 mt-1">
                       <span className="opacity-60 shrink-0">Physical Size:</span>
-                      <span className="font-bold text-right">{(total_cols * x_pitch).toFixed(1)} x {(b.rows * y_pitch).toFixed(1)} μm</span>
+                      <span className="font-bold text-right">{(segCols * x_pitch).toFixed(1)} x {(b.rows * y_pitch).toFixed(1)} μm</span>
                     </div>
                   </div>
                 </div>

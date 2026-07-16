@@ -111,8 +111,7 @@ export function getDefaultLayoutConfig(): LayoutConfig {
     x_pitch: 2.2,
     y_pitch: 2.2,
     total_cols: 1936,
-    active_col_purpose: 'active',
-    rov_purpose: 'c1',
+        rov_purpose: 'c1',
     rows: [
       { purpose: 'bottom', rows: 1, name: 'bottom' },
       { purpose: 'dummy', rows: 1, name: 'dummy' },
@@ -424,27 +423,6 @@ export function generateSkillCode(config: LayoutConfig): string {
   code.push('      )');
   code.push('    )');
   code.push('');
-
-  if (config.rotate180) {
-    code.push('    ; --- Apply Final R180 Rotation to Entire Array ---');
-    code.push('    printf("\\nApplying R180 rotation to entire array...\\n")');
-    code.push('    foreach(item allInsts');
-    code.push('      inst = car(item)');
-    code.push('      C = centerBox(inst~>bBox)');
-    code.push('      if( inst~>orient == "R0" then inst~>orient = "R180"');
-    code.push('      else if( inst~>orient == "R180" then inst~>orient = "R0"');
-    code.push('      else if( inst~>orient == "R90" then inst~>orient = "R270"');
-    code.push('      else if( inst~>orient == "R270" then inst~>orient = "R90"');
-    code.push('      else if( inst~>orient == "MY" then inst~>orient = "MX"');
-    code.push('      else if( inst~>orient == "MX" then inst~>orient = "MY"');
-    code.push('      else if( inst~>orient == "MYR90" then inst~>orient = "MXR90"');
-    code.push('      else if( inst~>orient == "MXR90" then inst~>orient = "MYR90"');
-    code.push('      ))))))))');
-    code.push('      C_new = centerBox(inst~>bBox)');
-    code.push('      inst~>xy = list(car(inst~>xy) - car(C) - car(C_new) cadr(inst~>xy) - cadr(C) - cadr(C_new))');
-    code.push('    )');
-    code.push('');
-  }
   code.push('    dbSave(cv)');
   code.push('    dbClose(cv)');
   code.push('    printf("\\nPixel Array Generation Complete!\\n")');
@@ -481,7 +459,6 @@ import re
 import sys
 
 EXCEL_FILE = "array_pixel.xlsx"
-ROTATE_180 = False  # Set to True to apply final R180 rotation to the array
 SKILL_FILE = "pixel_array.il"
 
 # =========================================================
@@ -608,7 +585,6 @@ def main():
 
     cr, cc = col_pos
     total_cols = None
-    active_col_purpose = ""
     found_col_num = False
 
     # Check same row first for numeric column count
@@ -630,29 +606,19 @@ def main():
                 continue
             try:
                 total_cols = int(float(value))
-                if cc + 1 < tmpl.shape[1]:
-                    active_col_purpose = norm(tmpl.iat[r, cc + 1])
+
                 found_col_num = True
                 break
             except Exception as e:
                 pass
 
-    # Also search for "Purpose" or "active_col_purpose" near col_num to get active_col_purpose
-    purpose_pos = find_keyword(tmpl, "purpose")
-    if purpose_pos is not None:
-        pr, pc = purpose_pos
-        for c in range(pc + 1, tmpl.shape[1]):
-            val = norm(tmpl.iat[pr, c])
-            if val != "":
-                active_col_purpose = val
-                break
+
 
     if total_cols is None:
         raise RuntimeError("Failed to get TOTAL_COLS.")
 
     print("TOTAL_COLS =", total_cols)
-    print("ACTIVE COL PURPOSE =", active_col_purpose)
-
+    
     # =========================================================
     # Parse row_num table
     # =========================================================
@@ -693,8 +659,8 @@ def main():
             break
 
         purpose_txt = ""
-        if tmpl.shape[1] > 2:
-            purpose_txt = norm(tmpl.iat[r, 2])
+        if rc + 1 < tmpl.shape[1]:
+            purpose_txt = norm(tmpl.iat[r, rc + 1])
 
         try:
             row_count = int(float(row_count_txt))
@@ -713,12 +679,12 @@ def main():
 
         # Parse left and right segments
         left_txt = ""
-        if tmpl.shape[1] > 3:
-            left_txt = norm(tmpl.iat[r, 3])
+        if rc + 3 < tmpl.shape[1]:
+            left_txt = norm(tmpl.iat[r, rc + 3])
 
         right_txt = ""
-        if tmpl.shape[1] > 4:
-            right_txt = norm(tmpl.iat[r, 4])
+        if rc + 4 < tmpl.shape[1]:
+            right_txt = norm(tmpl.iat[r, rc + 4])
 
         left_segs = parse_segments_string(left_txt, 'dummy')
         right_segs = parse_segments_string(right_txt, 'dummy')
@@ -1069,27 +1035,6 @@ def main():
      inst~>xy = list(car(inst~>xy) + car(C) - car(C_new) cadr(inst~>xy) + cadr(C) - cadr(C_new))
    )
  )
-    if ROTATE_180:
-        skill.append('''
- ; --- Apply Final R180 Rotation to Entire Array ---
- printf("\nApplying R180 rotation to entire array...\n")
- foreach(item allInsts
-   inst = car(item)
-   C = centerBox(inst~>bBox)
-   if( inst~>orient == "R0" then inst~>orient = "R180"
-   else if( inst~>orient == "R180" then inst~>orient = "R0"
-   else if( inst~>orient == "R90" then inst~>orient = "R270"
-   else if( inst~>orient == "R270" then inst~>orient = "R90"
-   else if( inst~>orient == "MY" then inst~>orient = "MX"
-   else if( inst~>orient == "MX" then inst~>orient = "MY"
-   else if( inst~>orient == "MYR90" then inst~>orient = "MXR90"
-   else if( inst~>orient == "MXR90" then inst~>orient = "MYR90"
-   ))))))))
-   C_new = centerBox(inst~>bBox)
-   inst~>xy = list(car(inst~>xy) - car(C) - car(C_new) cadr(inst~>xy) - cadr(C) - cadr(C_new))
- )
-''')
-
 
  dbSave(cv)
  dbClose(cv)
@@ -1128,7 +1073,6 @@ import pandas as pd
 import re
 
 EXCEL_FILE = "array_pixel.xlsx"
-ROTATE_180 = False  # Set to True to apply final R180 rotation to the array
 SKILL_FILE = "pixel_array.il"
 
 # Initialize skill variable as an empty list to avoid NameError
@@ -1258,7 +1202,6 @@ if col_pos is None:
 cr, cc = col_pos
 
 total_cols = None
-active_col_purpose = None
 
 for r in range(cr + 1, min(cr + 20, tmpl.shape[0])):
 
@@ -1275,10 +1218,7 @@ for r in range(cr + 1, min(cr + 20, tmpl.shape[0])):
             float(value)
         )
 
-        if cc + 1 < tmpl.shape[1]:
-            active_col_purpose = norm(
-                tmpl.iat[r, cc + 1]
-            )
+
 
         break
 
@@ -1292,7 +1232,6 @@ if total_cols is None:
     )
 
 print("TOTAL_COLS =", total_cols)
-print("ACTIVE COL PURPOSE =", active_col_purpose)
 
 # =========================================================
 # Parse row_num table
@@ -1624,27 +1563,6 @@ skill.append("""
    )
  )
 
-    if ROTATE_180:
-        skill.append('''
- ; --- Apply Final R180 Rotation to Entire Array ---
- printf("\nApplying R180 rotation to entire array...\n")
- foreach(item allInsts
-   inst = car(item)
-   C = centerBox(inst~>bBox)
-   if( inst~>orient == "R0" then inst~>orient = "R180"
-   else if( inst~>orient == "R180" then inst~>orient = "R0"
-   else if( inst~>orient == "R90" then inst~>orient = "R270"
-   else if( inst~>orient == "R270" then inst~>orient = "R90"
-   else if( inst~>orient == "MY" then inst~>orient = "MX"
-   else if( inst~>orient == "MX" then inst~>orient = "MY"
-   else if( inst~>orient == "MYR90" then inst~>orient = "MXR90"
-   else if( inst~>orient == "MXR90" then inst~>orient = "MYR90"
-   ))))))))
-   C_new = centerBox(inst~>bBox)
-   inst~>xy = list(car(inst~>xy) - car(C) - car(C_new) cadr(inst~>xy) - cadr(C) - cadr(C_new))
- )
-''')
-
  dbSave(cv)
 
  printf("\\\\nPixel Array Generation Complete\\\\n")
@@ -1674,7 +1592,8 @@ print("Done.")
   }
 }
 
-export function parseSegmentsString(txt: string, defaultPurpose: string = 'dummy'): RowSegment[] {
+export function parseSegmentsString(txt: string | number, defaultPurpose: string = 'dummy'): RowSegment[] {
+  if (typeof txt === 'number') txt = String(txt);
   if (!txt || txt.trim() === '') return [];
   // Supports formats like:
   // "20" (defaults to "dummy:20")
@@ -1692,7 +1611,7 @@ export function parseSegmentsString(txt: string, defaultPurpose: string = 'dummy
         segments.push({ purpose: defaultPurpose, cols });
       }
     } else {
-      const match = clean.match(/^([a-zA-Z0-9_]+):(\d+)$/);
+      const match = clean.match(/^([a-zA-Z0-9_]+)\s*:\s*(\d+)$/);
       if (match) {
         const purp = match[1].trim().toLowerCase();
         const cols = parseInt(match[2], 10);
@@ -1705,7 +1624,10 @@ export function parseSegmentsString(txt: string, defaultPurpose: string = 'dummy
   return segments;
 }
 
-export function getLeftRightStringsFromSegments(segments: RowSegment[] | undefined, mainPurpose: string): { leftStr: string, rightStr: string } {
+export function getLeftRightStringsFromSegments(segments: RowSegment[] | undefined, mainPurpose: string, row?: RowConfig): { leftStr: string, rightStr: string } {
+  if (row && typeof row.leftStr === 'string' && typeof row.rightStr === 'string') {
+    return { leftStr: row.leftStr, rightStr: row.rightStr };
+  }
   if (!segments || segments.length === 0) {
     return { leftStr: '', rightStr: '' };
   }
@@ -1952,8 +1874,7 @@ export function parseExcelFile(fileBuffer: ArrayBuffer): LayoutConfig {
 
   const [cr, cc] = colPos;
   let total_cols = 1;
-  let active_col_purpose = '';
-  let foundColNum = false;
+    let foundColNum = false;
 
   // Check same row first for numeric column count
   for (let c = cc + 1; c < colsCount; c++) {
@@ -1973,9 +1894,7 @@ export function parseExcelFile(fileBuffer: ArrayBuffer): LayoutConfig {
       const parsed = parseInt(val, 10);
       if (!isNaN(parsed)) {
         total_cols = parsed;
-        if (cc + 1 < colsCount) {
-          active_col_purpose = grid[r][cc + 1];
-        }
+
         foundColNum = true;
         break;
       }
@@ -1994,17 +1913,7 @@ export function parseExcelFile(fileBuffer: ArrayBuffer): LayoutConfig {
     );
   }
 
-  // Also search for "Purpose" or "active_col_purpose" near col_num to get active_col_purpose
-  const purposePos = findKeyword('purpose');
-  if (purposePos) {
-    const [pr, pc] = purposePos;
-    for (let c = pc + 1; c < colsCount; c++) {
-      if (grid[pr][c] !== '') {
-        active_col_purpose = grid[pr][c];
-        break;
-      }
-    }
-  }
+
 
   // Find row_num
   const rowPos = findKeyword('row_num');
@@ -2029,8 +1938,8 @@ export function parseExcelFile(fileBuffer: ArrayBuffer): LayoutConfig {
     if (rowCountTxt === '') break;
 
     let purposeTxt = '';
-    if (colsCount > 2) {
-      purposeTxt = grid[r][2];
+    if (colsCount > rc + 1) {
+      purposeTxt = grid[r][rc + 1];
     }
 
     const row_count = parseInt(rowCountTxt, 10);
@@ -2049,8 +1958,8 @@ export function parseExcelFile(fileBuffer: ArrayBuffer): LayoutConfig {
     }
 
     // Parse left and right segments
-    const leftTxt = colsCount > 3 ? grid[r][3] : '';
-    const rightTxt = colsCount > 4 ? grid[r][4] : '';
+    const leftTxt = colsCount > rc + 3 ? grid[r][rc + 3] : '';
+    const rightTxt = colsCount > rc + 4 ? grid[r][rc + 4] : '';
 
     const leftSegs = parseSegmentsString(leftTxt, 'dummy');
     const rightSegs = parseSegmentsString(rightTxt, 'dummy');
@@ -2071,7 +1980,9 @@ export function parseExcelFile(fileBuffer: ArrayBuffer): LayoutConfig {
     const rowConf: RowConfig = {
       purpose: purpose,
       rows: row_count,
-      name: rowName
+      name: rowName,
+      leftStr: leftTxt,
+      rightStr: rightTxt
     };
 
     if (segments.length > 0) {
@@ -2134,8 +2045,7 @@ export function parseExcelFile(fileBuffer: ArrayBuffer): LayoutConfig {
     x_pitch,
     y_pitch,
     total_cols,
-    active_col_purpose,
-    rov_purpose,
+        rov_purpose,
     rows,
     cell_map
   };
@@ -2153,20 +2063,30 @@ export function exportToExcel(config: LayoutConfig): ArrayBuffer {
     'rotation': cell.rot
   }));
   const pixSheet = XLSX.utils.json_to_sheet(pixRows);
+  pixSheet['!cols'] = [
+    { wch: 20 },
+    { wch: 30 },
+    { wch: 45 },
+    { wch: 15 }
+  ];
   XLSX.utils.book_append_sheet(wb, pixSheet, 'pix_tbl');
 
   // 2. Create format_template sheet data
   // We need to build a sheet grid manually containing our parameters in the layout found by find_keyword
   const formatData: any[][] = [
-    ['library', config.top_lib, '', '', '', '', ''],
-    ['cellname', config.top_cell, '', '', '', '', ''],
-    ['x pitch', config.x_pitch, '', '', '', '', ''],
-    ['y pitch', config.y_pitch, '', '', '', '', ''],
+    ['--- ARRAY GLOBAL SETTINGS ---', '', '', '', '', '', ''],
+    ['library', config.top_lib, '<-- Target library name', '', '', '', ''],
+    ['cellname', config.top_cell, '<-- Target cell view name', '', '', '', ''],
+    ['x pitch', config.x_pitch, '<-- Width of one pixel column (um)', '', '', '', ''],
+    ['y pitch', config.y_pitch, '<-- Height of one pixel row (um)', '', '', '', ''],
     ['', '', '', '', '', '', ''],
-    ['col_num', '', '', '', '', '', ''],
-    [config.total_cols, config.active_col_purpose || 'active', '', '', '', '', ''],
+    ['--- ARRAY WIDTH ---', '', '', '', '', '', ''],
+    ['col_num', '', '<-- Total number of columns', '', '', '', ''],
+    [config.total_cols, '', '', '', '', '', ''],
     ['', '', '', '', '', '', ''],
-    ['row_num', 'Row Block Purpose Name', 'Marker (ROV)', 'Left Columns (Padding)', 'Right Columns (Padding)', '', '']
+    ['--- ROW STACK LAYOUT (ORDERED BOTTOM TO TOP) ---', '', '', '', '', '', ''],
+    ['row_num', 'Row Block Purpose Name', 'Marker (ROV)', 'Left Columns (Padding)', 'Right Columns (Padding)', 'Notes', ''],
+    ['(Number of rows)', '(Which cell from pix_tbl?)', '(Type "ROV" here to mark)', '(e.g. dummy:20)', '(e.g. dummy:20)', '', '']
   ];
 
   config.rows.forEach(row => {
@@ -2200,6 +2120,14 @@ export function exportToExcel(config: LayoutConfig): ArrayBuffer {
   });
 
   const tmplSheet = XLSX.utils.aoa_to_sheet(formatData);
+  tmplSheet['!cols'] = [
+    { wch: 20 }, // col A
+    { wch: 30 }, // col B
+    { wch: 35 }, // col C
+    { wch: 25 }, // col D
+    { wch: 25 }, // col E
+    { wch: 30 }  // col F
+  ];
   XLSX.utils.book_append_sheet(wb, tmplSheet, 'format_template');
 
   // Generate ArrayBuffer representation

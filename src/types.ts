@@ -15,6 +15,8 @@ export interface RowConfig {
   rows: number;
   name?: string;
   segments?: RowSegment[];
+  leftStr?: string;
+  rightStr?: string;
 }
 
 export interface LayoutConfig {
@@ -23,10 +25,9 @@ export interface LayoutConfig {
   x_pitch: number;
   y_pitch: number;
   total_cols: number;
-  active_col_purpose: string;
+  
   rov_purpose: string;
-  rotate180?: boolean;
-  rows: RowConfig[];
+    rows: RowConfig[];
   cell_map: Record<string, CellInfo>;
 }
 
